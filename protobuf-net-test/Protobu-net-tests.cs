@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ProtoBuf;
@@ -14,9 +15,9 @@ namespace protobuf_net_test
     {
         static Protobuftests()
         {
-            Type t = typeof(Protobuftests);
-            MethodInfo factory = t.GetMethod("CreateObject");
-            RuntimeTypeModel.Default.SetDefaultFactory(factory);
+            //Type t = typeof(Protobuftests);
+            //MethodInfo factory = t.GetMethod("CreateObject");
+            //RuntimeTypeModel.Default.SetDefaultFactory(factory);
         }
 
         [TestMethod] 
@@ -24,10 +25,13 @@ namespace protobuf_net_test
         {
             TestClassWithList test = new TestClassWithList {Id = 5, Names = new List<string>(), Childrens = new int[0] };
             MemoryStream ms = new MemoryStream();
-            ProtoBuf.Serializer.Serialize(ms, test);
-            TestClassWithList deserialized = ProtoBuf.Serializer.Deserialize<TestClassWithList>(ms);
+            Serializer.Serialize(ms, test);
+            ms.Seek(0, SeekOrigin.Begin);
+            TestClassWithList deserialized = Serializer.Deserialize<TestClassWithList>(ms);
             Assert.IsNotNull(deserialized.Names);
+            Assert.AreEqual(deserialized.Names.Count, 0);
             Assert.IsNotNull(deserialized.Childrens);
+            Assert.AreEqual(deserialized.Childrens.Count(), 0);
             Assert.AreEqual(test.Id, deserialized.Id);
         }
 

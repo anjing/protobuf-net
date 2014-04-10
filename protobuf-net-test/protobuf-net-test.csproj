@@ -56,7 +56,7 @@
     <Compile Include="TestClassWithList.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\protobuf-net.csproj">
+    <ProjectReference Include="..\protobuf-net\protobuf-net.csproj">
       <Project>{8374e4d7-2a91-48f1-9360-09b09cf27c3f}</Project>
       <Name>protobuf-net</Name>
     </ProjectReference>

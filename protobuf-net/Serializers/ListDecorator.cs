@@ -396,6 +396,8 @@ namespace ProtoBuf.Serializers
             current = Helpers.GetGetMethod(Helpers.GetProperty(iteratorType,"Current", false), false, false);
             return getEnumerator;
         }
+
+
 #if FEAT_COMPILER
         protected override void EmitWrite(ProtoBuf.Compiler.CompilerContext ctx, ProtoBuf.Compiler.Local valueFrom)
         {
@@ -468,11 +470,14 @@ namespace ProtoBuf.Serializers
         {
             SubItemToken token;
             bool writePacked = WritePacked;
-            if (writePacked)
+            IEnumerable enumable = (IEnumerable)value;
+            bool noItem = !enumable.GetEnumerator().MoveNext();
+            if (writePacked || noItem)
             {
                 ProtoWriter.WriteFieldHeader(fieldNumber, WireType.String, dest);
                 token = ProtoWriter.StartSubItem(value, dest);
-                ProtoWriter.SetPackedField(fieldNumber, dest);
+                if ( writePacked )
+                    ProtoWriter.SetPackedField(fieldNumber, dest);
             }
             else
             {
@@ -484,9 +489,9 @@ namespace ProtoBuf.Serializers
                 if (checkForNull && subItem == null) { throw new NullReferenceException(); }
                 Tail.Write(subItem, dest);
             }
-            if (writePacked)
+            if (writePacked || noItem )
             {
-                ProtoWriter.EndSubItem(token, dest);
+                ProtoWriter.EndSubItem(token, dest);                
             }
         }
         public override object Read(object value, ProtoReader source)
@@ -522,7 +527,9 @@ namespace ProtoBuf.Serializers
                     IList list = (IList)value;
                     do
                     {
-                        list.Add(Tail.Read(null, source));
+                        object item = Tail.Read(null, source);
+                        if ( item.GetType() == Tail.ExpectedType && !string.IsNullOrEmpty(item.ToString()))
+                            list.Add(item);
                     } while (source.TryReadFieldHeader(field));
                 }
                 else
