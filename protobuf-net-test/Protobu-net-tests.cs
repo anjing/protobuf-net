@@ -13,17 +13,11 @@ namespace protobuf_net_test
     [TestClass]
     public class Protobuftests
     {
-        static Protobuftests()
-        {
-            //Type t = typeof(Protobuftests);
-            //MethodInfo factory = t.GetMethod("CreateObject");
-            //RuntimeTypeModel.Default.SetDefaultFactory(factory);
-        }
 
         [TestMethod] 
-        public void DefaultFactoryTest()
+        public void EmptyCollectionTest()
         {
-            TestClassWithList test = new TestClassWithList {Id = 5, Names = new List<string>(), Childrens = new int[0] };
+            TestClassWithList test = new TestClassWithList {Id = 5, Names = new List<string>(), Childrens = new int[0], ListInts = new List<int>() };
             MemoryStream ms = new MemoryStream();
             Serializer.Serialize(ms, test);
             ms.Seek(0, SeekOrigin.Begin);
@@ -32,29 +26,24 @@ namespace protobuf_net_test
             Assert.AreEqual(deserialized.Names.Count, 0);
             Assert.IsNotNull(deserialized.Childrens);
             Assert.AreEqual(deserialized.Childrens.Count(), 0);
+            Assert.IsNotNull(deserialized.ListInts);
+            Assert.AreEqual(deserialized.ListInts.Count(), 0);
+
             Assert.AreEqual(test.Id, deserialized.Id);
         }
 
-        public static object CreateObject(Type t)
+        [TestMethod]
+        public void NullCollectionTest()
         {
-            object res = Activator.CreateInstance(t);
-            PropertyInfo[] properties = t.GetProperties();
-            foreach(var prop in properties)
-            {
-                object value = prop.GetValue(res);
-                if (value != null) continue;
-                Type pType = prop.PropertyType;
-                if ( pType.IsGenericType )
-                {
-                    value = Activator.CreateInstance(pType);
-                }
-                else if ( pType.IsArray)
-                {
-                    value = Array.CreateInstance(pType.GetElementType(), 0);
-                }
-                prop.SetValue(res, value);
-            }
-            return res;
+            TestClassWithList test = new TestClassWithList { Id = 5};
+            MemoryStream ms = new MemoryStream();
+            Serializer.Serialize(ms, test);
+            ms.Seek(0, SeekOrigin.Begin);
+            TestClassWithList deserialized = Serializer.Deserialize<TestClassWithList>(ms);
+            Assert.IsNull(deserialized.Names); 
+            Assert.IsNull(deserialized.ListInts);
+            Assert.IsNull(deserialized.Childrens);
+            Assert.AreEqual(test.Id, deserialized.Id);
         }
     }
 }

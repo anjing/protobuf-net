@@ -17,5 +17,7 @@ namespace protobuf_net_test
         public List<string> Names { get; set; }
         [ProtoMember(3)]
         public int[] Childrens { get; set; }
+        [ProtoMember(4)]
+        public List<int> ListInts { get; set; }
     }
 }

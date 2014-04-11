@@ -140,11 +140,12 @@ namespace ProtoBuf.Serializers
             int len = arr.Count;
             SubItemToken token;
             bool writePacked = (options & OPTIONS_WritePacked) != 0;
-            if (writePacked)
+            if (writePacked || len == 0 )
             {
                 ProtoWriter.WriteFieldHeader(fieldNumber, WireType.String, dest);
                 token = ProtoWriter.StartSubItem(value, dest);
-                ProtoWriter.SetPackedField(fieldNumber, dest);
+                if ( writePacked )
+                    ProtoWriter.SetPackedField(fieldNumber, dest);
             }
             else
             {
@@ -157,7 +158,7 @@ namespace ProtoBuf.Serializers
                 if (checkForNull && obj == null) { throw new NullReferenceException(); }
                 Tail.Write(obj, dest);
             }
-            if (writePacked)
+            if (writePacked || len == 0)
             {
                 ProtoWriter.EndSubItem(token, dest);
             }            
@@ -179,7 +180,9 @@ namespace ProtoBuf.Serializers
             { 
                 do
                 {
-                    list.Add(Tail.Read(null, source));
+                    object item = Tail.Read(null, source);
+                    if ((item.GetType() == Tail.ExpectedType || item.GetType().IsSubclassOf(Tail.ExpectedType)) && !string.IsNullOrEmpty(item.ToString()))
+                        list.Add(item);
                 } while (source.TryReadFieldHeader(field));
             }
             int oldLen = AppendToCollection ? ((value == null ? 0 : ((Array)value).Length)) : 0;

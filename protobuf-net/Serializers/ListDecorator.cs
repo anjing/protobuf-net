@@ -471,7 +471,7 @@ namespace ProtoBuf.Serializers
             SubItemToken token;
             bool writePacked = WritePacked;
             IEnumerable enumable = (IEnumerable)value;
-            bool noItem = !enumable.GetEnumerator().MoveNext();
+            bool noItem = !enumable.GetEnumerator().MoveNext() && IsList && !SuppressIList;
             if (writePacked || noItem)
             {
                 ProtoWriter.WriteFieldHeader(fieldNumber, WireType.String, dest);
@@ -528,7 +528,7 @@ namespace ProtoBuf.Serializers
                     do
                     {
                         object item = Tail.Read(null, source);
-                        if ( item.GetType() == Tail.ExpectedType && !string.IsNullOrEmpty(item.ToString()))
+                        if ( (item.GetType() == Tail.ExpectedType || item.GetType().IsSubclassOf(Tail.ExpectedType)) && !string.IsNullOrEmpty(item.ToString()))
                             list.Add(item);
                     } while (source.TryReadFieldHeader(field));
                 }
