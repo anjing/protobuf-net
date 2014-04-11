@@ -14,7 +14,7 @@ namespace ProtoBuf.Serializers
 {
     sealed class ArrayDecorator : ProtoDecoratorBase
     {
-
+        private bool isEmpty = false;
         private readonly int fieldNumber;
         private const byte
                    OPTIONS_WritePacked = 1,
@@ -138,9 +138,10 @@ namespace ProtoBuf.Serializers
         {
             IList arr = (IList)value;
             int len = arr.Count;
+            isEmpty = 0 == len;
             SubItemToken token;
             bool writePacked = (options & OPTIONS_WritePacked) != 0;
-            if (writePacked || len == 0 )
+            if (writePacked || isEmpty )
             {
                 ProtoWriter.WriteFieldHeader(fieldNumber, WireType.String, dest);
                 token = ProtoWriter.StartSubItem(value, dest);
@@ -158,7 +159,7 @@ namespace ProtoBuf.Serializers
                 if (checkForNull && obj == null) { throw new NullReferenceException(); }
                 Tail.Write(obj, dest);
             }
-            if (writePacked || len == 0)
+            if (writePacked || isEmpty)
             {
                 ProtoWriter.EndSubItem(token, dest);
             }            
@@ -181,7 +182,7 @@ namespace ProtoBuf.Serializers
                 do
                 {
                     object item = Tail.Read(null, source);
-                    if ((item.GetType() == Tail.ExpectedType || item.GetType().IsSubclassOf(Tail.ExpectedType)) && !string.IsNullOrEmpty(item.ToString()))
+                    if (!isEmpty)
                         list.Add(item);
                 } while (source.TryReadFieldHeader(field));
             }

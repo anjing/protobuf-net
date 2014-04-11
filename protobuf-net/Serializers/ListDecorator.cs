@@ -48,7 +48,7 @@ namespace ProtoBuf.Serializers
         private bool SupportNull { get { return (options & OPTIONS_SupportNull) != 0; } }
         private bool ReturnList { get { return (options & OPTIONS_ReturnList) != 0; } }
         protected readonly WireType packedWireType;
-
+        private bool isEmpty = false;
 
         internal static ListDecorator Create(TypeModel model, Type declaredType, Type concreteType, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, bool returnList, bool overwriteList, bool supportNull)
         {
@@ -470,9 +470,10 @@ namespace ProtoBuf.Serializers
         {
             SubItemToken token;
             bool writePacked = WritePacked;
+            bool checkForNull = !SupportNull;
             IEnumerable enumable = (IEnumerable)value;
-            bool noItem = !enumable.GetEnumerator().MoveNext() && IsList && !SuppressIList;
-            if (writePacked || noItem)
+            isEmpty = !enumable.GetEnumerator().MoveNext() && IsList && !SuppressIList;
+            if (writePacked || isEmpty)
             {
                 ProtoWriter.WriteFieldHeader(fieldNumber, WireType.String, dest);
                 token = ProtoWriter.StartSubItem(value, dest);
@@ -483,17 +484,17 @@ namespace ProtoBuf.Serializers
             {
                 token = new SubItemToken(); // default
             }
-            bool checkForNull = !SupportNull;
             foreach (object subItem in (IEnumerable)value)
             {
                 if (checkForNull && subItem == null) { throw new NullReferenceException(); }
                 Tail.Write(subItem, dest);
             }
-            if (writePacked || noItem )
+            if (writePacked || isEmpty)
             {
                 ProtoWriter.EndSubItem(token, dest);                
             }
         }
+
         public override object Read(object value, ProtoReader source)
         {
             int field = source.FieldNumber;
@@ -528,7 +529,7 @@ namespace ProtoBuf.Serializers
                     do
                     {
                         object item = Tail.Read(null, source);
-                        if ( (item.GetType() == Tail.ExpectedType || item.GetType().IsSubclassOf(Tail.ExpectedType)) && !string.IsNullOrEmpty(item.ToString()))
+                        if ( !isEmpty )
                             list.Add(item);
                     } while (source.TryReadFieldHeader(field));
                 }
