@@ -283,6 +283,10 @@ namespace ProtoBuf
             writer.wireType = WireType.None;
         }
         int depth = 0;
+        /// <summary>
+        /// 
+        /// </summary>
+        public int Depth { get { return depth; } }
         const int RecursionCheckDepth = 25;
         /// <summary>
         /// Indicates the start of a nested record.

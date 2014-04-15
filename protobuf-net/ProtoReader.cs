@@ -36,7 +36,10 @@ namespace ProtoBuf
         // note: objects are trapped (the ref and key mapped) via NoteObject
         uint trapCount; // uint is so we can use beq/bne more efficiently than bgt
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        public int Depth { get { return depth; } }
         /// <summary>
         /// Gets the number of the field being processed.
         /// </summary>

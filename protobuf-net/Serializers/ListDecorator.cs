@@ -1,4 +1,5 @@
-﻿#if !NO_RUNTIME
+﻿using System.Collections.Generic;
+#if !NO_RUNTIME
 using System;
 using System.Collections;
 using ProtoBuf.Meta;
@@ -472,8 +473,8 @@ namespace ProtoBuf.Serializers
             bool writePacked = WritePacked;
             bool checkForNull = !SupportNull;
             IEnumerable enumable = (IEnumerable)value;
-            isEmpty = !enumable.GetEnumerator().MoveNext() && IsList && !SuppressIList;
-            if (writePacked || isEmpty)
+            bool emptyList = !enumable.GetEnumerator().MoveNext() && IsList && !SuppressIList;
+            if (writePacked || emptyList)
             {
                 ProtoWriter.WriteFieldHeader(fieldNumber, WireType.String, dest);
                 token = ProtoWriter.StartSubItem(value, dest);
@@ -489,10 +490,11 @@ namespace ProtoBuf.Serializers
                 if (checkForNull && subItem == null) { throw new NullReferenceException(); }
                 Tail.Write(subItem, dest);
             }
-            if (writePacked || isEmpty)
+            if (writePacked || emptyList)
             {
                 ProtoWriter.EndSubItem(token, dest);                
             }
+            isEmpty = !enumable.GetEnumerator().MoveNext() && IsList && !SuppressIList;
         }
 
         public override object Read(object value, ProtoReader source)
