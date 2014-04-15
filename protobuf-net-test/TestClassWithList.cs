@@ -19,5 +19,7 @@ namespace protobuf_net_test
         public int[] Childrens { get; set; }
         [ProtoMember(4)]
         public List<int> ListInts { get; set; }
+        [ProtoMember(5)]
+        public List<TestClassWithList> SubLists { get; set; }
     }
 }

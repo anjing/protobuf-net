@@ -17,7 +17,7 @@ namespace protobuf_net_test
         [TestMethod] 
         public void EmptyCollectionTest()
         {
-            TestClassWithList test = new TestClassWithList {Id = 5, Names = new List<string>(), Childrens = new int[0], ListInts = new List<int>() };
+            TestClassWithList test = new TestClassWithList {Id = 5, Names = new List<string>(), Childrens = new int[0], ListInts = new List<int>(), SubLists = new List<TestClassWithList>()};
             MemoryStream ms = new MemoryStream();
             Serializer.Serialize(ms, test);
             ms.Seek(0, SeekOrigin.Begin);
@@ -29,7 +29,7 @@ namespace protobuf_net_test
             Assert.IsNotNull(deserialized.ListInts);
             Assert.AreEqual(deserialized.ListInts.Count(), 0);
             Assert.AreEqual(test.Id, deserialized.Id);
-
+            Assert.IsNotNull(deserialized.SubLists);
         }
 
         [TestMethod]
@@ -49,7 +49,11 @@ namespace protobuf_net_test
         [TestMethod]
         public void CollectionTest()
         {
-            TestClassWithList test = new TestClassWithList { Id = 5, Names = new List<string>{"name1","name2",""}, ListInts = new List<int>{1,2,3}, Childrens = new []{3,4,5}};            
+            TestClassWithList test = new TestClassWithList
+            {
+                Id = 5, Names = new List<string>{"name1","name2",""}, ListInts = new List<int>{1,2,3}, Childrens = new []{3,4,5},
+                SubLists = new List<TestClassWithList> { new TestClassWithList { Id = 7} }
+            };            
             MemoryStream ms = new MemoryStream();
             Serializer.Serialize(ms, test);
             ms.Seek(0, SeekOrigin.Begin);
