@@ -8,13 +8,14 @@ using Type = IKVM.Reflection.Type;
 using IKVM.Reflection;
 #else
 using System.Reflection;
+using System.Collections.Generic;
 #endif
 
 namespace ProtoBuf.Serializers
 {
     sealed class ArrayDecorator : ProtoDecoratorBase
     {
-        private bool isEmpty = false;
+        private Dictionary<int,bool> emptyMap = new Dictionary<int,bool>();
         private readonly int fieldNumber;
         private const byte
                    OPTIONS_WritePacked = 1,
@@ -138,7 +139,7 @@ namespace ProtoBuf.Serializers
         {
             IList arr = (IList)value;
             int len = arr.Count;
-            isEmpty = 0 == len;
+            bool isEmpty = 0 == len;
             SubItemToken token;
             bool writePacked = (options & OPTIONS_WritePacked) != 0;
             if (writePacked || isEmpty )
@@ -162,7 +163,11 @@ namespace ProtoBuf.Serializers
             if (writePacked || isEmpty)
             {
                 ProtoWriter.EndSubItem(token, dest);
-            }            
+            }
+            if (emptyMap.ContainsKey(dest.Depth))
+                emptyMap[dest.Depth] = isEmpty;
+            else
+                emptyMap.Add(dest.Depth, isEmpty);
         }
         public override object Read(object value, ProtoReader source)
         {
@@ -182,7 +187,7 @@ namespace ProtoBuf.Serializers
                 do
                 {
                     object item = Tail.Read(null, source);
-                    if (!isEmpty)
+                    if (!emptyMap[source.Depth])
                         list.Add(item);
                 } while (source.TryReadFieldHeader(field));
             }
