@@ -49,7 +49,7 @@ namespace ProtoBuf.Serializers
         private bool SupportNull { get { return (options & OPTIONS_SupportNull) != 0; } }
         private bool ReturnList { get { return (options & OPTIONS_ReturnList) != 0; } }
         protected readonly WireType packedWireType;
-        private Dictionary<int,bool> emptyMap = new Dictionary<int,bool>();
+        private readonly Dictionary<int,bool> emptyMap = new Dictionary<int,bool>();
 
         internal static ListDecorator Create(TypeModel model, Type declaredType, Type concreteType, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, bool returnList, bool overwriteList, bool supportNull)
         {
@@ -534,7 +534,7 @@ namespace ProtoBuf.Serializers
                     do
                     {
                         object item = Tail.Read(null, source);
-                        if ( !emptyMap[source.Depth] )
+                        if ( !emptyMap.ContainsKey(source.Depth) || !emptyMap[source.Depth])
                             list.Add(item);
                     } while (source.TryReadFieldHeader(field));
                 }

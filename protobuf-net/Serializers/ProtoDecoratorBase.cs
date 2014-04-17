@@ -18,10 +18,6 @@ namespace ProtoBuf.Serializers
         protected ProtoDecoratorBase(IProtoSerializer tail) { this.Tail = tail; }
         public abstract bool ReturnsValue { get; }
         public abstract bool RequiresOldValue { get; }
-        protected object GetEmptyValue()
-        {
-            throw new NotImplementedException();
-        }
 #if !FEAT_IKVM
         public abstract void Write(object value, ProtoWriter dest);
         public abstract object Read(object value, ProtoReader source);

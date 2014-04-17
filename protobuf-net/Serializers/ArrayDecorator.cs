@@ -187,7 +187,7 @@ namespace ProtoBuf.Serializers
                 do
                 {
                     object item = Tail.Read(null, source);
-                    if (!emptyMap[source.Depth])
+                    if ( !emptyMap.ContainsKey(source.Depth) || !emptyMap[source.Depth])
                         list.Add(item);
                 } while (source.TryReadFieldHeader(field));
             }

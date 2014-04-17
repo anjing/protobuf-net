@@ -108,16 +108,16 @@ namespace protobuf_net_test
                 Assert.AreEqual(deserialized.SubList.Count,1);
                 Assert.AreEqual(deserialized.SubList[0].Layer, 2);
                 Assert.AreEqual(deserialized.SubList[0].SubList.Count, 0);
-
+            }
+            using (MemoryStream ms = new MemoryStream())
+            {
                 simple.SubList[0].SubList = new List<SimpleTest> { new SimpleTest { Layer = 3, SubList = new List<SimpleTest>() } };
                 Serializer.Serialize(ms, simple);
                 ms.Seek(0, SeekOrigin.Begin);
-                deserialized = Serializer.Deserialize<SimpleTest>(ms);
+                SimpleTest deserialized = Serializer.Deserialize<SimpleTest>(ms);
                 Assert.AreEqual(deserialized.SubList[0].SubList.Count, 1);
                 Assert.AreEqual(deserialized.SubList[0].SubList[0].SubList.Count, 0);
                 Assert.AreEqual(deserialized.SubList[0].SubList[0].Layer, 3);
-
-
             }
         }
     }
