@@ -350,7 +350,7 @@ namespace ProtoBuf.Meta
                 int key = GetKey(ref type);
                 if (key >= 0 && !Helpers.IsEnum(type))
                 {
-                    value = Deserialize(key, value, reader);
+                    value = Deserialize(key, value, reader);                    
                 }
                 else
                 {

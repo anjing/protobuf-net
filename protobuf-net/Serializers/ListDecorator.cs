@@ -494,10 +494,11 @@ namespace ProtoBuf.Serializers
             {
                 ProtoWriter.EndSubItem(token, dest);                
             }
-            if (emptyMap.ContainsKey(dest.Depth))
-                emptyMap[dest.Depth] = emptyList;
+            int depth = dest.Depth - 1;
+            if (emptyMap.ContainsKey(depth))
+                emptyMap[depth] = emptyList;
             else
-                emptyMap.Add(dest.Depth, emptyList);
+                emptyMap.Add(depth, emptyList);
         }
 
         public override object Read(object value, ProtoReader source)
