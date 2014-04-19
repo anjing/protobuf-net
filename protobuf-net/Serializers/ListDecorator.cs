@@ -49,8 +49,7 @@ namespace ProtoBuf.Serializers
         private bool SupportNull { get { return (options & OPTIONS_SupportNull) != 0; } }
         private bool ReturnList { get { return (options & OPTIONS_ReturnList) != 0; } }
         protected readonly WireType packedWireType;
-        private readonly Dictionary<int,bool> emptyMap = new Dictionary<int,bool>();
-
+        private readonly IProtoSerializer emptyTail;
         internal static ListDecorator Create(TypeModel model, Type declaredType, Type concreteType, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, bool returnList, bool overwriteList, bool supportNull)
         {
 #if !NO_GENERICS
@@ -103,7 +102,7 @@ namespace ProtoBuf.Serializers
                 }
                 if (add == null) throw new InvalidOperationException("Unable to resolve a suitable Add method for " + declaredType.FullName);
             }
-
+            emptyTail = new TagDecorator(fieldNumber, WireType.EmptyList, false, new BooleanSerializer(model));
         }
         protected virtual bool RequireAdd { get { return true; } }
 
@@ -472,33 +471,32 @@ namespace ProtoBuf.Serializers
             SubItemToken token;
             bool writePacked = WritePacked;
             bool checkForNull = !SupportNull;
-            IEnumerable enumable = (IEnumerable)value;
-            bool emptyList = !enumable.GetEnumerator().MoveNext() && IsList && !SuppressIList;
-            if (writePacked || emptyList)
+            if (writePacked )
             {
                 ProtoWriter.WriteFieldHeader(fieldNumber, WireType.String, dest);
                 token = ProtoWriter.StartSubItem(value, dest);
-                if ( writePacked )
-                    ProtoWriter.SetPackedField(fieldNumber, dest);
+                ProtoWriter.SetPackedField(fieldNumber, dest);
             }
             else
             {
                 token = new SubItemToken(); // default
             }
+            IEnumerable enumable = (IEnumerable)value;
+            bool emptyList = !enumable.GetEnumerator().MoveNext() && IsList && !SuppressIList;
+            if (emptyList)
+            {
+                emptyTail.Write(emptyList, dest);
+            }
+            else
             foreach (object subItem in (IEnumerable)value)
             {
                 if (checkForNull && subItem == null) { throw new NullReferenceException(); }
                 Tail.Write(subItem, dest);
             }
-            if (writePacked || emptyList)
+            if (writePacked)
             {
                 ProtoWriter.EndSubItem(token, dest);                
             }
-            int depth = dest.Depth - 1;
-            if (emptyMap.ContainsKey(depth))
-                emptyMap[depth] = emptyList;
-            else
-                emptyMap.Add(depth, emptyList);
         }
 
         public override object Read(object value, ProtoReader source)
@@ -534,9 +532,13 @@ namespace ProtoBuf.Serializers
                     IList list = (IList)value;
                     do
                     {
-                        object item = Tail.Read(null, source);
-                        if ( !emptyMap.ContainsKey(source.Depth) || !emptyMap[source.Depth])
-                            list.Add(item);
+                        if (source.WireType == WireType.EmptyList)
+                        {
+                            bool isEmpty = (bool)emptyTail.Read(null, source);
+                            if (isEmpty)
+                                continue;
+                        }
+                        list.Add(Tail.Read(null, source));
                     } while (source.TryReadFieldHeader(field));
                 }
                 else

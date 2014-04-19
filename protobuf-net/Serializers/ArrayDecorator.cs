@@ -15,7 +15,6 @@ namespace ProtoBuf.Serializers
 {
     sealed class ArrayDecorator : ProtoDecoratorBase
     {
-        private Dictionary<int,bool> emptyMap = new Dictionary<int,bool>();
         private readonly int fieldNumber;
         private const byte
                    OPTIONS_WritePacked = 1,
@@ -23,6 +22,7 @@ namespace ProtoBuf.Serializers
                    OPTIONS_SupportNull = 4;
         private readonly byte options;
         private readonly WireType packedWireType;
+        private readonly IProtoSerializer emptyTail;
         public ArrayDecorator(TypeModel model, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, Type arrayType, bool overwriteList, bool supportNull)
             : base(tail)
         {
@@ -49,6 +49,7 @@ namespace ProtoBuf.Serializers
             if (overwriteList) options |= OPTIONS_OverwriteList;
             if (supportNull) options |= OPTIONS_SupportNull;
             this.arrayType = arrayType;
+            emptyTail = new TagDecorator(fieldNumber, WireType.EmptyList, false, new BooleanSerializer(model));
         }
         readonly Type arrayType, itemType; // this is, for example, typeof(int[])
         public override Type ExpectedType { get { return arrayType; } }
@@ -139,35 +140,33 @@ namespace ProtoBuf.Serializers
         {
             IList arr = (IList)value;
             int len = arr.Count;
-            bool isEmpty = 0 == len;
             SubItemToken token;
             bool writePacked = (options & OPTIONS_WritePacked) != 0;
-            if (writePacked || isEmpty )
+            if (writePacked)
             {
                 ProtoWriter.WriteFieldHeader(fieldNumber, WireType.String, dest);
                 token = ProtoWriter.StartSubItem(value, dest);
-                if ( writePacked )
-                    ProtoWriter.SetPackedField(fieldNumber, dest);
+                ProtoWriter.SetPackedField(fieldNumber, dest);
             }
             else
             {
                 token = new SubItemToken(); // default
             }
             bool checkForNull = !SupportNull;
+            bool isEmpty = 0 == len;
+            if ( isEmpty)
+                emptyTail.Write(isEmpty, dest);
+            else
             for (int i = 0; i < len; i++)
             {
                 object obj = arr[i];
                 if (checkForNull && obj == null) { throw new NullReferenceException(); }
                 Tail.Write(obj, dest);
             }
-            if (writePacked || isEmpty)
+            if (writePacked)
             {
                 ProtoWriter.EndSubItem(token, dest);
             }
-            if (emptyMap.ContainsKey(dest.Depth))
-                emptyMap[dest.Depth] = isEmpty;
-            else
-                emptyMap.Add(dest.Depth, isEmpty);
         }
         public override object Read(object value, ProtoReader source)
         {
@@ -186,9 +185,13 @@ namespace ProtoBuf.Serializers
             { 
                 do
                 {
-                    object item = Tail.Read(null, source);
-                    if ( !emptyMap.ContainsKey(source.Depth) || !emptyMap[source.Depth])
-                        list.Add(item);
+                    if (source.WireType == WireType.EmptyList)
+                    {
+                        bool isEmpty = (bool)emptyTail.Read(null, source);
+                        if (isEmpty)
+                            continue;
+                    }
+                    list.Add(Tail.Read(null, source));
                 } while (source.TryReadFieldHeader(field));
             }
             int oldLen = AppendToCollection ? ((value == null ? 0 : ((Array)value).Length)) : 0;

@@ -148,6 +148,7 @@ namespace ProtoBuf
                 case WireType.StartGroup:
                 case WireType.SignedVariant:
                 case WireType.Variant:
+                case WireType.EmptyList:
                     break; // fine
                 case WireType.None:
                 case WireType.EndGroup:
@@ -283,10 +284,6 @@ namespace ProtoBuf
             writer.wireType = WireType.None;
         }
         int depth = 0;
-        /// <summary>
-        /// 
-        /// </summary>
-        public int Depth { get { return depth; } }
         const int RecursionCheckDepth = 25;
         /// <summary>
         /// Indicates the start of a nested record.
@@ -705,6 +702,7 @@ namespace ProtoBuf
                     ProtoWriter.WriteInt64((int)value, writer);
                     return;
                 case WireType.Variant:
+                case WireType.EmptyList:
                     WriteUInt32Variant(value, writer);
                     writer.wireType = WireType.None;
                     return;

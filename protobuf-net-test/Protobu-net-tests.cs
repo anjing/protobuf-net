@@ -140,7 +140,7 @@ namespace protobuf_net_test
             SimpleTest simple = new SimpleTest
             {
                 Layer = 1,
-                SubList = new List<SimpleTest> {new SimpleTest {Layer = 2, SubList = new List<SimpleTest>()}}
+                SubList = new List<SimpleTest>{new SimpleTest {Layer = 2, SubList = new List<SimpleTest>()}}
             };
             using (MemoryStream ms = new MemoryStream())
             {

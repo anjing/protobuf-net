@@ -36,11 +36,7 @@ namespace ProtoBuf
         // note: objects are trapped (the ref and key mapped) via NoteObject
         uint trapCount; // uint is so we can use beq/bne more efficiently than bgt
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public int Depth { get { return depth; } }
-        /// <summary>
+       /// <summary>
         /// Gets the number of the field being processed.
         /// </summary>
         public int FieldNumber { get { return fieldNumber; } }
@@ -204,6 +200,7 @@ namespace ProtoBuf
             switch (wireType)
             {
                 case WireType.Variant:
+                case WireType.EmptyList:
                     return ReadUInt32Variant(false);
                 case WireType.Fixed32:
                     if (available < 4) Ensure(4, true);
