@@ -15,9 +15,9 @@ namespace protobuf_net_test
         public int Id { get; set; }
         [ProtoMember(2)]        
         public List<string> Names { get; set; }
-        [ProtoMember(3)]
+        [ProtoMember(3, IsPacked = true)]
         public int[] Childrens { get; set; }
-        [ProtoMember(4)]
+        [ProtoMember(4, IsPacked = true)]
         public List<int> ListInts { get; set; }
         [ProtoMember(5)]
         public List<TestClassWithList> SubLists { get; set; }

@@ -471,7 +471,9 @@ namespace ProtoBuf.Serializers
             SubItemToken token;
             bool writePacked = WritePacked;
             bool checkForNull = !SupportNull;
-            if (writePacked )
+            IEnumerable enumable = (IEnumerable)value;
+            bool isEmpty = !enumable.GetEnumerator().MoveNext() && IsList && !SuppressIList;
+            if (writePacked && !isEmpty)
             {
                 ProtoWriter.WriteFieldHeader(fieldNumber, WireType.String, dest);
                 token = ProtoWriter.StartSubItem(value, dest);
@@ -481,19 +483,15 @@ namespace ProtoBuf.Serializers
             {
                 token = new SubItemToken(); // default
             }
-            IEnumerable enumable = (IEnumerable)value;
-            bool emptyList = !enumable.GetEnumerator().MoveNext() && IsList && !SuppressIList;
-            if (emptyList)
-            {
-                emptyTail.Write(emptyList, dest);
-            }
+            if (isEmpty)
+                emptyTail.Write(true, dest);
             else
             foreach (object subItem in (IEnumerable)value)
             {
                 if (checkForNull && subItem == null) { throw new NullReferenceException(); }
                 Tail.Write(subItem, dest);
             }
-            if (writePacked)
+            if (writePacked && !isEmpty)
             {
                 ProtoWriter.EndSubItem(token, dest);                
             }

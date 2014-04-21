@@ -140,9 +140,10 @@ namespace ProtoBuf.Serializers
         {
             IList arr = (IList)value;
             int len = arr.Count;
+            bool isEmpty = 0 == len;
             SubItemToken token;
             bool writePacked = (options & OPTIONS_WritePacked) != 0;
-            if (writePacked)
+            if (writePacked && !isEmpty)
             {
                 ProtoWriter.WriteFieldHeader(fieldNumber, WireType.String, dest);
                 token = ProtoWriter.StartSubItem(value, dest);
@@ -153,9 +154,8 @@ namespace ProtoBuf.Serializers
                 token = new SubItemToken(); // default
             }
             bool checkForNull = !SupportNull;
-            bool isEmpty = 0 == len;
             if ( isEmpty)
-                emptyTail.Write(isEmpty, dest);
+                emptyTail.Write(true, dest);
             else
             for (int i = 0; i < len; i++)
             {
@@ -163,7 +163,7 @@ namespace ProtoBuf.Serializers
                 if (checkForNull && obj == null) { throw new NullReferenceException(); }
                 Tail.Write(obj, dest);
             }
-            if (writePacked)
+            if (writePacked && !isEmpty)
             {
                 ProtoWriter.EndSubItem(token, dest);
             }
